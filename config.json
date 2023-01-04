@@ -1,0 +1,8 @@
+{
+	"genesisTimestamp": 1672531200,
+	"treasuryAccount": "0xTreasury",
+	"firePitAccount": "0xFirePit",
+	"insuranceFundAccount": "0xInsuranceFund",
+	"flexAccount": "0xFlex",
+    "notes": "Genesis timestamp is for Jan. 1, 2023 00:00:00"
+}
