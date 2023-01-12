@@ -8,7 +8,10 @@ const { Protocol } = require('./protocol');
 const packageDefinition = protoLoader.loadSync('./vulcan.proto', {});
 const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackage;
 
-const EPOCH_INTERVAL_MSEC = 1; // Can be any value for simulator...smaller = faster
+// CHANGE THIS VALUE TO SPEED UP EPOCHS IN SIMULATOR
+const EPOCH_INTERVAL_MSEC = 1000; // Can be any value for simulator...smaller = faster
+
+
 const EPOCH_SECONDS = 15 * 60; // 15 minutes in seconds
 
 // Create the RPC server
@@ -36,17 +39,17 @@ server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), async
 		     
         let rebaseInfo = protocol.rebase();
 
-		if (rebaseInfo != null) {
-			console.info(
-				'\nEpoch:\t' + String(rebaseInfo.epoch).padStart(12, '0'), 
-				'\t',
-				new Date(timestamp * 1000).toISOString().replace(':00.000Z','').replace('T',' '),
-				'\n',
-				'🪙\t' + uint256.Commify(rebaseInfo.circulatingSupply),
-				'\n',
-				'🔥\t' + uint256.Commify(rebaseInfo.firePitBalance)
-			);
-		}
+		console.info(
+			'\nEpoch:\t' + String(rebaseInfo.epoch).padStart(12, '0'), 
+			'\t',
+			new Date(timestamp * 1000).toISOString().replace(':00.000Z','').replace('T',' '),
+			'\n',
+			'🪙\t' + uint256.Commify(rebaseInfo.circulatingSupply),
+			'\n',
+			'🔥\t' + uint256.Commify(rebaseInfo.firePitBalance),
+			'\n',
+			'🚀\tRebasing ' + (rebaseInfo.active ? 'ACTIVE' : 'ENDED')
+		);
 
 		timestamp += EPOCH_SECONDS;
 

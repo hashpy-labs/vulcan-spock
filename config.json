@@ -4,10 +4,12 @@
 
 	"genesisAccounts": {
 		"0xTreasury": 33000000,
-		"0xDemo1": 10000,
-		"0xDemo2": 25000,
-		"0xDemo3": 5000,
-		"0xDemo4": 1000
+		"0xSacrificers": 6000000,
+		"0xNodeOwners": 1000000,
+		"0xDemo1": 0,
+		"0xDemo2": 0,
+		"0xDemo3": 0,
+		"0xDemo4": 0
 	},
 
 	"treasuryTaxRate": 1,

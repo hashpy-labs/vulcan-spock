@@ -65,7 +65,7 @@ class uint256 {
 
     static Commify(x) {
         let c = ethers.utils.commify(typeof x === 'object' ? x.bigNumber : x).split(',');
-        c.length = c.length - 6;
+        c.length = c.length > 6 ? c.length - 6 : c.length;
         return c.join(',');
 
     }

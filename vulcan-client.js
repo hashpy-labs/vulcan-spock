@@ -9,14 +9,28 @@ const client = new vulcanPackage.Vulcan('localhost:50051', grpc.credentials.crea
 
 
 getBalance('0xTreasury');
+getBalance('0x0000');
+getBalance('0xFlex');
+getBalance('0xSacrificers');
+getBalance('0xNodeOwners');
 getBalance('0xDemo1');
-transfer('0xTreasury', '0xDemo1', 1000);
-transfer('0xDemo1', '0xDemo3', 500);
-gasTransfer('0xDemo3', '0xDemo4', 10);
-transferBulk(transfers1);
+getBalance('0xDemo2');
+getBalance('0xDemo3');
+getBalance('0xDemo4');
+
+transfer('0xTreasury', '0xDemo1', 1000000);
+transfer('0xTreasury', '0xDemo2', 10000);
+transfer('0xTreasury', '0xDemo3', 10000);
+transfer('0xTreasury', '0xDemo4', 10000);
+transfer('0xDemo1', '0xDemo3', 900000);
+gasTransfer('0xDemo1', '0xNodeOwners', 1000);
+//transferBulk(transfers1);
+
 getBalance('0xTreasury');
 getBalance('0x0000');
 getBalance('0xFlex');
+getBalance('0xSacrificers');
+getBalance('0xNodeOwners');
 getBalance('0xDemo1');
 getBalance('0xDemo2');
 getBalance('0xDemo3');

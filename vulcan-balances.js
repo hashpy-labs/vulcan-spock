@@ -10,6 +10,8 @@ const client = new vulcanPackage.Vulcan('localhost:50051', grpc.credentials.crea
 getBalance('0xTreasury');
 getBalance('0x0000');
 getBalance('0xFlex');
+getBalance('0xSacrificers');
+getBalance('0xNodeOwners');
 getBalance('0xDemo1');
 getBalance('0xDemo2');
 getBalance('0xDemo3');
@@ -23,7 +25,7 @@ function getBalance(account) {
 		if (err) {
 			console.log(err);
 		} else {
-			console.log(`\nBalance of ${account}`, response.balance);
+			console.log(`\nBalance of ${account}`, uint256.Commify(response.balance));
 		}
 	});
 }

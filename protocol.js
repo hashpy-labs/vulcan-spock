@@ -72,48 +72,38 @@ class Protocol {
     rebase() {
 
         // Rebasing stops once MaxSupply is reached
-        if (this.#isRebaseActive === false) {
-            return null;
-        }
+        if (this.#isRebaseActive === true) {
 
-        // Destroy FirePit balance on next epich after end of every quarter
-        if (this.#epoch % BURN_EPOCH_INTERVAL === 0) {
-            this.#shouldSlashFirePit = true;
-        }
-
-        // Only rebase after 0th Epoch
-        if (this.#epoch > 0) {
-
-            if (this.#shouldSlashFirePit) {
-                this._slashFirePit();
-                this.#shouldSlashFirePit = false;
+            // Destroy FirePit balance on next epich after end of every quarter
+            if (this.#epoch % BURN_EPOCH_INTERVAL === 0) {
+                this.#shouldSlashFirePit = true;
             }
 
-            const newCirculatingSupply = uint256.Add(
-                this.circulatingSupply,
-                uint256.Div(
-                    uint256.Mul(
-                        this.circulatingSupply,
-                        REBASE_RATE
-                    ),
-                    REBASE_DIVISOR
-                )
-            );
+            // Only rebase after 0th Epoch
+            if (this.#epoch > 0) {
 
-            if (newCirculatingSupply.LTE(MAX_VUL_SUPPLY)) {  // Only increase supply if less than MAX
-                this.circulatingSupply = newCirculatingSupply;
-                this.#vulsPerFrag = uint256.Div(TOTAL_FRAGMENTS, this.circulatingSupply);
-            } else {
-                this.#isRebaseActive = false; // Stop rebasing
-                // throw new Error(new Date(this.timestamp * 1000).toISOString().replace(':00.000Z','').replace('T',' '),)
+                if (this.#shouldSlashFirePit) {
+                    this._slashFirePit();
+                    this.#shouldSlashFirePit = false;
+                }
+
+                this.#isRebaseActive = this._mintCirculatingSupply(
+                        uint256.Div(
+                            uint256.Mul(
+                                this.circulatingSupply,
+                                REBASE_RATE
+                            ),
+                            REBASE_DIVISOR
+                    ));
+
             }
-
         }
 
         // Increment the epoch
         this.#epoch++;
 
         return {
+            active: this.#isRebaseActive,
             epoch: this.#epoch - 1,
             circulatingSupply: this.circulatingSupply,
             vulsPerFrag: this.#vulsPerFrag,
@@ -207,12 +197,33 @@ class Protocol {
     }
 
     _slashFirePit() {
-        let destroyTargetAmount = uint256.Div(uint256.Mul(this.circulatingSupply, BURN_SUPPLY_THRESHOLD), PERCENT_DIVISOR);
+        let destroyThresholdAmount = uint256.Div(uint256.Mul(this.circulatingSupply, BURN_SUPPLY_THRESHOLD), PERCENT_DIVISOR);
         const firePitAmount = this._unvirtualize(this.#fragBalances[this.firePitAccount]);
-        if (firePitAmount.GTE(destroyTargetAmount)) {
-            this.circulatingSupply = uint256.Sub(this.circulatingSupply, destroyTargetAmount);
-            this.#fragBalances[this.firePitAccount] = uint256.Sub(this.#fragBalances[this.firePitAccount], this._virtualize(destroyTargetAmount));
+        if (firePitAmount.GTE(destroyThresholdAmount)) {
+            let destroyTargetAmount = uint256.Div(uint256.Mul(this.circulatingSupply, BURN_SUPPLY_THRESHOLD - 2), PERCENT_DIVISOR);
+            this._burnCirculatingSupply(this.firePitAccount, destroyTargetAmount);
         }
+    }
+
+    _mintCirculatingSupply(amount) {
+        if (uint256.Add(this.circulatingSupply, amount).LTE(MAX_VUL_SUPPLY)) {
+            this.circulatingSupply = uint256.Add(this.circulatingSupply, amount);
+
+            // IMPORTANT: Only change vulsPerFrag after modifying account balances
+            this.#vulsPerFrag = uint256.Div(TOTAL_FRAGMENTS, this.circulatingSupply);
+            return true;    
+        }
+        return false;
+    }
+
+    _burnCirculatingSupply(account, amount) {        
+
+        // VAPORIZE, NUKE, ANNIHILATE
+        this.circulatingSupply = uint256.Sub(this.circulatingSupply, amount);
+        this.#fragBalances[account] = uint256.Sub(this.#fragBalances[account], this._virtualize(amount));
+
+        // IMPORTANT: Only change vulsPerFrag after modifying account balances
+        this.#vulsPerFrag = uint256.Div(TOTAL_FRAGMENTS, this.circulatingSupply);
     }
 
     _virtualizeAndScale(num) {
