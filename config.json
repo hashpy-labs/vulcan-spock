@@ -1,8 +1,16 @@
 {
-	"genesisTimestamp": 1672531200,
 	"treasuryAccount": "0xTreasury",
-	"firePitAccount": "0xFirePit",
-	"insuranceFundAccount": "0xInsuranceFund",
 	"flexAccount": "0xFlex",
-    "notes": "Genesis timestamp is for Jan. 1, 2023 00:00:00"
+
+	"genesisAccounts": {
+		"0xTreasury": 33000000,
+		"0xDemo1": 10000,
+		"0xDemo2": 25000,
+		"0xDemo3": 5000,
+		"0xDemo4": 1000
+	},
+
+	"treasuryTaxRate": 1,
+	"flexTaxRate": 1,
+	"firePitTaxRate": 3
 }

@@ -5,10 +5,10 @@ Spock is a simulator for Vulcan Protocol that enables what-if scenarios to proje
 ### Current Status
 
 The basic simulator is operational with the following RPC calls available:
-- getConfig
 - getBalance
 - getCirculatingSupply
 - transfer
+- gasTransfer
 
 ### Configuration
 
@@ -25,3 +25,4 @@ Terminal window 2: `npm run vclient`
 
 (Optional)
 Terminal window 3: `npm run vbalances` (returns balances of main and demo accounts without any transactions)
+

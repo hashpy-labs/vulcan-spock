@@ -1,42 +1,40 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const { ethers } = require('ethers');
+const { uint256 } = require('./go-uint256');
 const transfers1 = require('./transfers-1.json');
-
 const packageDefinition = protoLoader.loadSync('./vulcan.proto', {});
 const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackage;
 
 const client = new vulcanPackage.Vulcan('localhost:50051', grpc.credentials.createInsecure());
 
-// Gets the configuration settings of the protocol
-client.getConfig(null,  (err, response) => {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log(`\nFrom Vulcan`, JSON.stringify(response, null, 2));
-	}
-});
-
-// Get the circulating supply
-client.getCirculatingSupply(null, (err, response) => {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log(`\nCirculating Supply`, ethers.utils.commify(response.totalSupply));
-	}
-});
 
 getBalance('0xTreasury');
 getBalance('0xDemo1');
+transfer('0xTreasury', '0xDemo1', 1000);
+transfer('0xDemo1', '0xDemo3', 500);
+gasTransfer('0xDemo3', '0xDemo4', 10);
 transferBulk(transfers1);
-getBalance('0xFirePit');
-getBalance('0xInsuranceFund');
+getBalance('0xTreasury');
+getBalance('0x0000');
 getBalance('0xFlex');
 getBalance('0xDemo1');
 getBalance('0xDemo2');
 getBalance('0xDemo3');
 getBalance('0xDemo4');
+getCirculatingSupply();
 
+
+function getCirculatingSupply() {
+	// Get the circulating supply
+	client.getCirculatingSupply(null, (err, response) => {
+		if (err) {
+			console.log(err);
+		} else {
+			
+			console.log(`\nCirculating Supply`, uint256.Commify(response.circulatingSupply));
+		}
+	});
+}
 
 
 function getBalance(account) {
@@ -45,7 +43,7 @@ function getBalance(account) {
 		if (err) {
 			console.log(err);
 		} else {
-			console.log(`\nBalance of ${account}`, ethers.utils.commify(response.balance));
+			console.log(`\nBalance of ${account}`, uint256.Commify(response.balance));
 		}
 	});
 }
@@ -55,9 +53,22 @@ function transfer(from, to, amount) {
 		if (err) {
 			console.log(err);
 		} else {
-			response.balances[0].balance = ethers.utils.commify(response.balances[0].balance);
-			response.balances[1].balance = ethers.utils.commify(response.balances[1].balance);
-			console.log(`\nTransfer ${amount} from ${from} to ${to}`, JSON.stringify(response, null, 2));
+			response.balances[0].balance = uint256.Commify(response.balances[0].balance);
+			response.balances[1].balance = uint256.Commify(response.balances[1].balance);
+			console.log(`\nTransfer: ${amount} from ${from} to ${to}`, JSON.stringify(response, null, 2));
+		}
+	});
+}
+
+
+function gasTransfer(from, to, amount) {
+	client.gasTransfer({ from: from, to: to, amount: amount }, (err, response) => {
+		if (err) {
+			console.log(err);
+		} else {
+			response.balances[0].balance = uint256.Commify(response.balances[0].balance);
+			response.balances[1].balance = uint256.Commify(response.balances[1].balance);
+			console.log(`\nGas Transfer: ${amount} from ${from} to ${to}`, JSON.stringify(response, null, 2));
 		}
 	});
 }
@@ -65,6 +76,6 @@ function transfer(from, to, amount) {
 function transferBulk(data) {
 
 	data.forEach((item) => {
-		transfer(item.from, item.to, item.amount);
+		transfer(item.from, item.to, item.amount, true);
 	});
 }

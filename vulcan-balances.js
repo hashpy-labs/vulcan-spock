@@ -1,6 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const { ethers } = require('ethers');
+const { uint256 } = require('./go-uint256');
 
 const packageDefinition = protoLoader.loadSync('./vulcan.proto', {});
 const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackage;
@@ -8,9 +8,8 @@ const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackag
 const client = new vulcanPackage.Vulcan('localhost:50051', grpc.credentials.createInsecure());
 
 getBalance('0xTreasury');
-// getBalance('0xFirePit');
-// getBalance('0xInsuranceFund');
-// getBalance('0xFlex');
+getBalance('0x0000');
+getBalance('0xFlex');
 getBalance('0xDemo1');
 getBalance('0xDemo2');
 getBalance('0xDemo3');
@@ -24,7 +23,7 @@ function getBalance(account) {
 		if (err) {
 			console.log(err);
 		} else {
-			console.log(`\nBalance of ${account}`, ethers.utils.commify(response.balance));
+			console.log(`\nBalance of ${account}`, response.balance);
 		}
 	});
 }

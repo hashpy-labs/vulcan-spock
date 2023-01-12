@@ -1,67 +1,82 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const { ethers } = require('ethers');
+
+const { uint256 } = require('./go-uint256');
 const config = require('./config.json');
-const { Spock } = require('./spock');
+const { Protocol } = require('./protocol');
 
 const packageDefinition = protoLoader.loadSync('./vulcan.proto', {});
 const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackage;
 
-const EPOCH_INTERVAL_MSEC = 1000;
+const EPOCH_INTERVAL_MSEC = 1; // Can be any value for simulator...smaller = faster
+const EPOCH_SECONDS = 15 * 60; // 15 minutes in seconds
 
 // Create the RPC server
 const server = new grpc.Server();
 
-// Initialize the Spock simulator
-const spock = new Spock(config);
+// Initialize the protocol simulator
+const protocol = new Protocol(config);
 
 // Add the service
 server.addService(vulcanPackage.Vulcan.service, {
-	'getConfig': getConfig,
 	'getBalance': getBalance,
-	'getCirculatingSupply': getCirculatingSupply,
-	'transfer': transfer
+	'transfer': transfer,
+	'gasTransfer': gasTransfer,
+	'getCirculatingSupply': getCirculatingSupply
 });
 
 server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), async () => {
 	console.log("Vulcan Protocol running at http://127.0.0.1:50051");
 	server.start();
+	
+	let timestamp = 1672531200; // 1/1/2023 00:00:00
 
-    await new Promise(resolve => setInterval(() => { 
+	await new Promise(resolve => setInterval(() => { 
         
-		spock.incrementEpoch()
-        let rebaseInfo = spock.rebase();
-        console.info(
-            'Epoch: ' + String(rebaseInfo.epoch).padStart(12, '0'), 
-            '\t',
-            '🕰: ' + new Date(rebaseInfo.timestamp * 1000).toISOString().replace(':00.000Z','').replace('T',' '),
-			'\t',
-			'🪙: ' + ethers.utils.commify(rebaseInfo.totalSupply)
-        );
+		     
+        let rebaseInfo = protocol.rebase();
+
+		if (rebaseInfo != null) {
+			console.info(
+				'\nEpoch:\t' + String(rebaseInfo.epoch).padStart(12, '0'), 
+				'\t',
+				new Date(timestamp * 1000).toISOString().replace(':00.000Z','').replace('T',' '),
+				'\n',
+				'🪙\t' + uint256.Commify(rebaseInfo.circulatingSupply),
+				'\n',
+				'🔥\t' + uint256.Commify(rebaseInfo.firePitBalance)
+			);
+		}
+
+		timestamp += EPOCH_SECONDS;
+
+
     }, EPOCH_INTERVAL_MSEC));
 
 }); // Server is insecure, no ssl
 
 
-
-function getConfig(call, callback) {
-	callback(null, spock.getConfig());
-}
-
 function getBalance(call, callback) {
-	callback(null, spock.getBalance(call.request.account));
+	callback(null, protocol.getBalance(call.request.account));
 }
 
-function getCirculatingSupply(call, callback) {
-	callback(null, spock.getCirculatingSupply());
+function getCirculatingSupply(call, callback) {console.log(protocol.getCirculatingSupply())
+	callback(null, protocol.getCirculatingSupply());
 }
 
 function transfer(call, callback) {
-	const result = spock.transfer(call.request.from, call.request.to, call.request.amount);
+	const result = protocol.transfer(call.request.from, call.request.to, call.request.amount);
 	callback(null, result);
 
-	console.info(`\nTransfer — amount: ${ethers.utils.commify(call.request.amount)}`);
-	console.info(`Transfer (After)  — from: ${call.request.from} (${ethers.utils.commify(result.balances[0].balance)}) to: ${call.request.to} (${ethers.utils.commify(result.balances[1].balance)})\n`);
+	console.info(`\nTransfer\tamount: ${uint256.Commify(call.request.amount)}\n\t\tfrom: ${call.request.from} (${uint256.Commify(result.balances[0].balance)}) \n\t\tto: ${call.request.to} (${uint256.Commify(result.balances[1].balance)})\n`);
+}
+
+
+function gasTransfer(call, callback) {
+	const result = protocol.gasTransfer(call.request.from, call.request.to, call.request.amount);
+	callback(null, result);
+
+	console.info(`\nGas Transfer\tamount: ${uint256.Commify(call.request.amount)}\n\t\tfrom: ${call.request.from} (${uint256.Commify(result.balances[0].balance)}) \n\t\tto: ${call.request.to} (${uint256.Commify(result.balances[1].balance)})\n`);
 }
 
 

@@ -40,7 +40,7 @@
         "amount": 2500
     },
     {
-        "from": "0xTreasury",
+        "from": "0xDemo1",
         "to": "0xDemo3",
         "amount": 1500
     },

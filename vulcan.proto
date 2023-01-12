@@ -5,10 +5,10 @@ syntax = 'proto3';
 package VulcanPackage;
 
 service Vulcan {
-    rpc getConfig (Empty) returns (ConfigInfo);
     rpc getBalance (AccountInfo) returns (BalanceInfo);
-    rpc getCirculatingSupply (Empty) returns (SupplyInfo);
     rpc transfer (TransferInfo) returns (BalancesInfo);
+    rpc gasTransfer (TransferInfo) returns (BalancesInfo);
+    rpc getCirculatingSupply (Empty) returns (SupplyInfo);
 }
 
 message Empty {}
@@ -27,30 +27,11 @@ message BalancesInfo {
 }
 
 message SupplyInfo {
-    string totalSupply = 1;
+    string circulatingSupply = 1;
 }
 
 message TransferInfo {
     string from = 1;
     string to = 2;
     uint32 amount = 3;
-}
-
-message ConfigInfo {
-    string name = 1;
-    string symbol = 2;
-    uint32 DECIMALS = 3;
-    string MAX_UINT256 = 4;
-    string MAX_VUL_SUPPLY = 5;
-    string INITIAL_VUL_SUPPLY = 6;
-    string TOTAL_FRAGS = 7;
-    string treasuryAccount = 8;
-    string firePitAccount = 9;
-    string insuranceFundAccount = 10;
-    string flexAccount = 11;
-    string deadAccount = 12;
-    uint32 treasuryFee = 13;
-    uint32 firePitFee = 14;
-    uint32 insuranceFundFee = 15;
-    uint32 flexFee = 16;
 }
