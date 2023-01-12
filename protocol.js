@@ -115,7 +115,7 @@ class Protocol {
     transfer(from, to, amount) {
 
         // Convert the amount from the actual to the internal virtual amount
-        let vulAmount = this._virtualizeAndScale(amount);
+        let vulAmount = this._scaleAndVirtualize(amount);
 
         // Transfer funds if there is enough balance in the sender's account
         if (this.#fragBalances[from] && uint256.Sub(this.#fragBalances[from], vulAmount).GTE(0)) {
@@ -150,7 +150,7 @@ class Protocol {
     gasTransfer(from, to, amount) {
 
         // Convert the amount from the actual to the internal virtual amount
-        let vulAmount = this._virtualizeAndScale(amount);
+        let vulAmount = this._scaleAndVirtualize(amount);
 
         // Transfer funds if there is enough balance in the sender's account
         if (this.#fragBalances[from] && uint256.Sub(this.#fragBalances[from], vulAmount).GTE(0)) {
@@ -187,13 +187,13 @@ class Protocol {
         // Set initial balances for all genesis accounts and track total in genesisAmount
         let genesisVulAmount = uint256.NewInt(0);
         Object.keys(accounts).forEach((account) => {
-            this.#fragBalances[account] = this._virtualize(uint256.Mul(accounts[account], DECIMAL_RANGE));
+            this.#fragBalances[account] = this._scaleAndVirtualize(accounts[account]);
             genesisVulAmount = uint256.Add(genesisVulAmount, this.#fragBalances[account]);
             console.log(`\nBalance of ${account}`, uint256.Commify(this._unvirtualize(this.#fragBalances[account])));
         });
 
         // All unused amount goes to the Fire Pit
-        this.#fragBalances[this.firePitAccount] = uint256.Sub(this._virtualize(INITIAL_VUL_SUPPLY), genesisVulAmount);
+        this.#fragBalances[this.firePitAccount] = uint256.Sub(this._virtualize(this.circulatingSupply), genesisVulAmount);
     }
 
     _slashFirePit() {
@@ -217,16 +217,22 @@ class Protocol {
     }
 
     _burnCirculatingSupply(account, amount) {        
-
+        console.log('Burn', uint256.Commify(amount))
         // VAPORIZE, NUKE, ANNIHILATE
+
+        const virtualizedAmount = this._virtualize(amount);
         this.circulatingSupply = uint256.Sub(this.circulatingSupply, amount);
-        this.#fragBalances[account] = uint256.Sub(this.#fragBalances[account], this._virtualize(amount));
+        console.log(account, uint256.Commify(this._unvirtualize(this.#fragBalances[account])), uint256.Commify(amount))
+        this.#fragBalances[account] = uint256.Sub(this.#fragBalances[account], virtualizedAmount);
+        console.log(account, uint256.Commify(this._unvirtualize(this.#fragBalances[account])), uint256.Commify(amount))
+
+        // NOTE: This code is currently reporting FirePit balance incorrectly
 
         // IMPORTANT: Only change vulsPerFrag after modifying account balances
         this.#vulsPerFrag = uint256.Div(TOTAL_FRAGMENTS, this.circulatingSupply);
     }
 
-    _virtualizeAndScale(num) {
+    _scaleAndVirtualize(num) {
         return uint256.Mul(this._scale(num), this.#vulsPerFrag);
     }
 

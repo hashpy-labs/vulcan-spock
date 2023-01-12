@@ -9,7 +9,7 @@ const packageDefinition = protoLoader.loadSync('./vulcan.proto', {});
 const vulcanPackage = grpc.loadPackageDefinition(packageDefinition).VulcanPackage;
 
 // CHANGE THIS VALUE TO SPEED UP EPOCHS IN SIMULATOR
-const EPOCH_INTERVAL_MSEC = 1000; // Can be any value for simulator...smaller = faster
+const EPOCH_INTERVAL_MSEC = 1; // Can be any value for simulator...smaller = faster
 
 
 const EPOCH_SECONDS = 15 * 60; // 15 minutes in seconds
